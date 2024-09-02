@@ -1,11 +1,7 @@
-const User = require("../models/user")
-const { hashPassword, comparePassword } = require("../helpers/auth")
 const jwt = require("jsonwebtoken");
 const { validationResult } = require("express-validator")
-
-const test = (req, res) => {
-    res.send("hey");
-};
+const User = require("../models/user")
+const { hashPassword, comparePassword } = require("../helpers/auth")
 
 const registerUser = async (req, res) => {
     try {
@@ -29,16 +25,16 @@ const registerUser = async (req, res) => {
         const hashedPassword = await hashPassword(password);
 
         //create user in database
-        const user = await User.create({
+        const newUser = await User.create({
             name,
             email,
             mobile,
             password: hashedPassword,
         })
 
-        return res.status(200).json(user)
-
-
+        res.json({
+            id: newUser._id, name: newUser.name, email: newUser.email
+        })
 
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -54,24 +50,22 @@ const loginUser = async (req, res) => {
         //check if User exists
         const user = await User.findOne({ email });
         if (!user) {
-            return res.json({
-                msg: "User Not Found"
-            })
+            return res.json({  msg: "User Not Found"   })
         }
 
         //check if passwords match
         const match = await comparePassword(password, user.password);
         if (!match) {
-            return res.json({
-                msg: "Invalid Credentials"
-            })
-
+            return res.json({   msg: "Invalid Credentials"  })
         }
 
-        jwt.sign({ email: user.email, id: user._id, name: user.name }, process.env.JWT_SECRET, {}, (err, token) => {
+        jwt.sign({ email: user.email, id: user._id, name: user.name }, process.env.JWT_SECRET, {expiresIn: '7d'}, (err, token) => {
             if (err) return console.log(err);
 
-            res.cookie('token', token).json(user);
+            res.cookie('token', token);
+            res.json({
+                id: user._id, name: user.name, email: user.email
+            });
 
         })
 
@@ -80,20 +74,9 @@ const loginUser = async (req, res) => {
     }
 }
 
-const getProfile = async (req, res) => {
-    const { token } = req.cookies;
-    if (!token) {
-        res.json(null);
-    }
-    jwt.verify(token, process.env.JWT_SECRET, {}, (err, user) => {
-        if (err) return console.log(err);
-        res.json(user);
-    })
-}
+
 
 module.exports = {
-    test,
     registerUser,
     loginUser,
-    getProfile,
 }

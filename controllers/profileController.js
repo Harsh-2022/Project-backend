@@ -1,5 +1,7 @@
-const updateRole = async (req,res)=>{
-    const { id } = req.params;
+const User = require('../models/user');
+
+const updateRole = async (req, res) => {
+  const { id } = req.params;
   const { newRole } = req.body;
 
   // Check if new role is valid
@@ -17,4 +19,13 @@ const updateRole = async (req,res)=>{
   }
 }
 
-module.exports = {updateRole}
+const getProfile = async (req, res) => {
+  const user = await User.findById(req.userID);
+  res.json(user);
+}
+
+
+module.exports = {
+  updateRole,
+  getProfile
+};

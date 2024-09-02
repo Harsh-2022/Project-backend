@@ -11,7 +11,7 @@ const userSchema = new mongoose.Schema(
             required: true,
             unique: true,
         },
-        mobile:{
+        mobile: {
             type: String,
             required: true
         },
@@ -19,15 +19,28 @@ const userSchema = new mongoose.Schema(
             type: String,
             required: true,
         },
-        role:{
+        pic:{
             type: String,
-            enum: ['Manager','Employee'],
+            required: true,
+            default: 'user.png',
+        },
+        role: {
+            type: String,
+            enum: ['Manager', 'Employee'],
             default: 'Employee',
         }
     },
-    {timestamps: true}
+    { timestamps: true }
 );
 
-const UserModel = mongoose.model("User",userSchema);
+userSchema.methods.toJSON = function () {
+    const userObject = this.toObject();
+    delete userObject.password;
+    delete userObject.createdAt;
+    delete userObject.updatedAt;
+    return userObject;
+};
+
+const UserModel = mongoose.model("User", userSchema);
 
 module.exports = UserModel;
